@@ -60,7 +60,7 @@ class Chart:
 
     def max_value(self):
         if not self.datadict:
-            return 0
+            return 5
         return max(self.datadict.values())
 
     def min_value(self):
