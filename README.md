@@ -85,9 +85,11 @@ Barchart follows a strict validation policy:
 
 ## Running Tests
 
-To run the unit test suite, execute:
+To run the test suite, execute:
 
 ```Bash
+pip install pytest
 
-python -m unittest test_chart.py
+# runing test with:
+pytest
 ```
