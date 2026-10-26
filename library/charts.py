@@ -1,7 +1,7 @@
 class Chart:
     def __init__(self, datalist = None):
         self.datadict = {}
-        self.value_at_end = True
+        self.valuelabel = True
         self.xunit = "%"
         self.sign = "#"
         self.scale = 1
@@ -87,7 +87,7 @@ class Chart:
         return len(self.datadict)
 
     def __repr__(self):
-        return f"Barchart(items={len(self.datadict)}, scale={self.scale}, sign={self.sign}, value_at_end={self.value_at_end}, xunit={self.xunit})"
+        return f"Barchart(items={len(self.datadict)}, scale={self.scale}, sign='{self.sign}', valuelabel={self.valuelabel}, xunit='{self.xunit}')"
 
     def __add__(self, other):
         if not isinstance(other, Barchart):
@@ -116,7 +116,7 @@ class Barchart(Chart):
     def __init__(self, datalist = None):
         super().__init__(datalist)
 
-class Barchart_vertical(Barchart):
+class Barchart_horizontal(Barchart):
     def __init__(self, datalist = None):
         super().__init__(datalist)
 
@@ -130,7 +130,7 @@ class Barchart_vertical(Barchart):
             label = f"{key}{space * ' '}"
             bar = int(self.scale * value) * str(self.sign)
             barvalue = (
-                f"({value}{self.xunit})" if self.value_at_end else ""
+                f"({value}{self.xunit})" if self.valuelabel else ""
             )
 
             row_color = self.color
@@ -150,26 +150,73 @@ class Barchart_vertical(Barchart):
         return string
 
 
-valuedict = {
-            "Banana": 4,
-            "Mango": 14
-        }
-valuedict2 = {
-            "Mango": 2,
-            "Plum": 3,
-            "Orange": 20,
-            "Apple": 10
-        }
+class Barchart_vertical(Barchart):
+    def __init__(self, datalist = None):
+        super().__init__(datalist)
 
-def vorlage():
-    """
-        #    |      (6%)
-        #    |        #  (5%)
-        #    |        #    #  (4%)
-        #    | (3%)   #    #    #       (3%)
-        #    |   #    #    #    #  (2%)   #
-        #    |   #    #    #    #    #    #
-        #    |   #    #    #    #    #    #
-        #    +-------------------------------
-        #      1980 1990 2000 2010 2020 2030
-    """
+    def __str__(self):
+        if not self.datadict:
+            return "Empty Chart"
+
+        # Standard-Scale ist 1.0 (kann jetzt auch 2 oder 0.5 sein)
+        scale = getattr(self, "scale", 1.0)
+
+        # Skalierte Werte berechnen (Multiplikation statt Division)
+        max_val = max(self.datadict.values())
+        max_val_scaled = int(
+            max_val * scale
+        )  # 'int' oder 'round' für ganze Zeilen
+
+        # Mindestens 1 Zeile hoch, selbst wenn skaliert sehr klein
+        if max_val_scaled < 1:
+            max_val_scaled = 1
+
+        label_len = self._longest_word()
+        value_label_len = (
+            len(str(max_val)) + len(str(self.xunit)) + 2
+            if self.valuelabel
+            else 0
+        )
+        space = max(label_len, value_label_len)
+
+        diagram = []
+
+        # Das Diagramm richtet sich nach der skalierten Maximalhöhe
+        for _ in range(max_val_scaled + 1):
+            diagram.append([self.colorize("|", self.color)])
+
+        for key, value in self.datadict.items():
+            bar_color = self.color
+            if self.highlight_max is not None and value == max_val:
+                bar_color = self.highlight_max
+            elif self.highlight_min is not None and value == self.min_value():
+                bar_color = self.highlight_min
+
+            # Skalierter Wert für diesen spezifischen Balken
+            scaled_value = int(value * scale)
+
+            for i in range(max_val_scaled + 1):
+                # Die Bedingung arbeitet jetzt mit dem Multiplikator
+                sign = (
+                           " " if i < max_val_scaled - scaled_value + 1 else self.sign
+                       ) * space
+                if self.valuelabel and i == max_val_scaled - scaled_value:
+                    value_label_text = (
+                        value if self.xunit == "" else str(value) + str(self.xunit)
+                    )
+                    sign = f"({value_label_text}){(space - len(str(self.xunit)) - (len(str(value))) - 2) * ' '}"
+
+                diagram[i].append(" ")
+                diagram[i].append(self.colorize(sign, bar_color))
+                diagram[i].append(" ")
+
+        axis_line = "+" + "-" * (len(self.datadict) * (space + 2))
+        diagram.append([self.colorize(axis_line, self.color)])
+
+        label_row = [" "]
+        for key in self.datadict.keys():
+            padded_key = str(key) + " " * (space - len(key))
+            label_row.append(self.colorize(f" {padded_key} ", self.color))
+        diagram.append(label_row)
+
+        return "\n".join("".join(row) for row in diagram)

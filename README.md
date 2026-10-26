@@ -1,16 +1,41 @@
-# Barchart 
+# Terminal Chart Library (WIP)
 
-> A lightweight, robust, and dependency-free Python library for rendering beautiful text-based barcharts directly in the terminal, featuring TrueColor support and value highlighting.
+> A lightweight, modular Python library for rendering vertical and horizontal ASCII barcharts in the terminal. Built with a strong focus on clean architecture, robust input validation, and enterprise-grade test automation.
 
-## Key FeaturesPure Python & No Dependencies: 
-- Works out-of-the-box using standard libraries.
-- Fail-Fast Validation: Strict input sanitization (TypeError, ValueError) for types, boundaries, scales, signs, and RGB colors.
-- ANSI TrueColor Support (24-bit): Custom global coloring via RGB tuples.
-- Smart Highlighting: Automatically highlight maximum and minimum values with distinct custom colors.
-- Chart Arithmetic: Seamlessly combine two charts using the + operator (aggregating values for overlapping keys).
-- Fully Tested: Comprehensive test suite ensuring high reliability.
+| Horizontal Barchart                                                  | Vertical Barchart                                                |
+|----------------------------------------------------------------------|------------------------------------------------------------------|
+| ![Exampels](demoimages/horizontal_example.png "Horizintal Barchart") | ![Exampels](demoimages/vertical_example.png "Vertival Barchart") |
 
-## Quick Start
+## Engineering Highlights & Best Practices: 
+This project was built to demonstrate professional software engineering standards, moving far beyond a basic script:
+
+- Advanced Test Automation (pytest):
+    - Utilizes complex @pytest.mark.parametrize matrices to test multiple chart types against broad datasets and invalid inputs efficiently.
+    - Strict adherence to the Single Responsibility Principle (SRP) and Black-Box Testing (testing via Public APIs rather than internal state).
+
+- CI/CD Quality Gate:
+  - Integrated GitHub Actions (.github/workflows/test.yml) to automatically trigger the test suite on every push, ensuring zero regressions.
+
+- Scalable Object-Oriented Design:
+    - Shared base classes implementing the DRY (Don't Repeat Yourself) principle for core logic (like strict validation protocols for colors and numerical inputs) while specializing rendering behavior for vertical and horizontal layouts.
+
+- Robust Error Handling:
+    - Precise type and range validation (ValueError, TypeError, KeyError) with dedicated negative test cases to guarantee system stability.
+
+## Architecture Overview
+```
+chart_library/
+├── library/
+│   └── charts.py          # barchart logic (for now)
+├── pytests/
+│   └── test_barchart.py   # barchart tests (for now)
+└── .github/
+    └── workflows/
+        └── test.yml       # Automated CI pipeline
+```
+
+
+## Quick Start & Usage
 
 ### Installation
 Simply copy chart.py into your project or include it as a module.
@@ -18,37 +43,40 @@ Simply copy chart.py into your project or include it as a module.
 ### Basic Usage
 
 ```Python
-from chart import Barchart
+from library.charts import Barchart_vertical, Barchart_horizontal
 ```
 
 ### Initialize with data
 
 ```Python
-data = {"Apple": 10, "Banana": 5, "Mango": 14}
-chart = Barchart(data)
+data = {"Apple": 10, "Banana": 4, "Orange": 20}
+
+chart_v = Barchart_vertical(data)
+chart_h = Barchart_horizontal(data)
 ```
 
 ### Print the chart
 
 ```Python
-print(chart)
+print(chart_v)
+print(chart_h)
 ```
 
 ### Advanced Customization
 
 ```Python
 # Customize appearance
-chart.scale = 1.5
-chart.sign = "#"
-chart.xunit = "%"
-chart.value_at_end = True
+chart_h.scale = 1.5
+chart_h.sign = "#"
+chart_h.xunit = "%"
+chart_h.value_at_end = True
 
 # Add colors (RGB tuples: 0-255)
-chart.color = (50, 200, 255)         # Global chart color (Blue/Cyan)
-chart.highlight_max = (0, 255, 0)    # Highlight highest value in Green
-chart.highlight_min = (255, 0, 0)    # Highlight lowest value in Red
+chart_h.color = (50, 200, 255)         # Global chart color (Blue/Cyan)
+chart_h.highlight_max = (0, 255, 0)    # Highlight highest value in Green
+chart_h.highlight_min = (255, 0, 0)    # Highlight lowest value in Red
 
-print(chart)
+print(chart_h)
 ```
 
 ### Combining Charts
@@ -56,8 +84,8 @@ print(chart)
 You can add two charts together. Duplicate keys will automatically have their values aggregated:
 
 ```Python
-chart1 = Barchart({"Apple": 10, "Banana": 5})
-chart2 = Barchart({"Apple": 5, "Cherry": 7})
+chart1 = Barchart_horizontal({"Apple": 10, "Banana": 5})
+chart2 = Barchart_horizontal({"Apple": 5, "Cherry": 7})
 
 combined = chart1 + chart2
 print(combined)
@@ -78,18 +106,19 @@ print(combined)
 
 ## Error Handling (Fail Fast)
 
-Barchart follows a strict validation policy:
+Chart-Library follows a strict validation policy:
 - Negative values or scales raise a ValueError.
 - Invalid types (e.g., passing a string where a number is expected, or a color tuple with out-of-range values) raise a TypeError.
 - Non-existent keys accessed via brackets raise a KeyError.
 
-## Running Tests
+## Running the Test Suite
 
-To run the test suite, execute:
+To run the automated tests locally with pytest:
 
 ```Bash
+# Install dependencies
 pip install pytest
 
-# runing test with:
-pytest
+# Run the test suite with verbose output
+pytest -v
 ```
